@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Get, NotFoundException, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { PostsModule } from './posts.module';
 
@@ -80,5 +80,42 @@ export class PostsController {
       ...posts, post
     ]
     return post; // 새로 만든 post 리턴하기 
+  }
+
+  @Put(':id') // path parameter 로 id를 받는다 
+  putPost(
+    @Param('id') id: string,
+    @Body('author') author?: string, // author, title, content 모두 optional
+    @Body('title') title?: string,
+    @Body('content') content?: string,
+  ) {
+    const post = posts.find(post => post.id === +id);
+
+    if (!post) {
+      throw new NotFoundException();
+    }
+
+    // 셋 중에 입력받은 것만 업데이트 처리 
+    if (author) { post.author = author; }
+    if (title) { post.title = title; }
+    if (content) { post.content = content; }
+
+    posts = posts.map(prevPost => prevPost.id === Number(id) ? post : prevPost);
+
+    return posts;
+  }
+
+  @Delete(':id')
+  deletePost(
+    @Param('id') id: string,
+  ) {
+    const post = posts.find(post => post.id === Number(id));
+
+    if (!post) {
+      throw new NotFoundException();
+    }
+    posts = posts.filter(post => post.id !== Number(id));
+
+    return id;
   }
 }
