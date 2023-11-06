@@ -1,12 +1,20 @@
 /* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
-
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { PostModel } from './entities/posts.entity';
+/*
 export interface PostModel {
   id: number;
+
   author: string;
+
   title: string;
+
   content: string;
+
   likeCount: number;
+
   commentCount: number;
 }
 
@@ -36,39 +44,49 @@ export let posts: PostModel[] = [
     commentCount: 99999,
   },
 ];
+*/
 @Injectable()
 export class PostsService {
-  getAllPosts() {
-    return posts;
+  constructor(
+    @InjectRepository(PostModel) private readonly postsRepository: Repository<PostModel>
+  ) { }
+  async getAllPosts() {
+    return this.postsRepository.find();
   }
 
-  getPostById(id: number) {
-    const post = posts.find((post) => post.id === +id);
+  async getPostById(id: number) {
+    const post = await this.postsRepository.findOne({
+      where: { id }
+    });
 
-    if (!post) { // post 가 undefined 라면, 
+    if (!post) {
       throw new NotFoundException();
     }
+
     return post;
   }
 
-  createPost(author: string, title: string, content: string) {
-    const post: PostModel = {
-      id: posts[posts.length - 1].id + 1,
+  async createPost(author: string, title: string, content: string) {
+    // 1) create -> 저장할 객체를 생성한다  
+    // 2) save -> 객체를 저장한다 (create 메서드에서 생성한 객체로 )
+    const post = this.postsRepository.create({
       author,
       title,
       content,
       likeCount: 0,
       commentCount: 0,
-    }
-    // posts 에 새로운 post 추가하기 
-    posts = [
-      ...posts, post
-    ]
-    return post; // 새로 만든 post 리턴하기 
+    });
+    const newPost = await this.postsRepository.save(post);
+    return newPost; // 새로 만든 post 리턴하기 
   }
 
-  updatePost(postId: number, author: string, title: string, content: string) {
-    const post = posts.find(post => post.id === postId);
+  async updatePost(postId: number, author: string, title: string, content: string) {
+    // save 의 기능 
+    // 1) 만약 데이터가 존재하지 않으면, 새로 생성 
+    // 2) 데이터가 존재하면, (같은 id 레코드) 값을 업데이트
+    const post = await this.postsRepository.findOne({
+      where: { id: postId },
+    });
 
     if (!post) {
       throw new NotFoundException();
@@ -78,19 +96,21 @@ export class PostsService {
     if (title) { post.title = title; }
     if (content) { post.content = content; }
 
-    posts = posts.map(prevPost => prevPost.id === postId ? post : prevPost);
+    const newPost = await this.postsRepository.save(post);
 
-    return posts;
+    return newPost;
   }
 
-  deletePost(postId: number) {
-    const post = posts.find(post => post.id === postId);
+  async deletePost(postId: number) {
+
+    const post = await this.postsRepository.findOne({
+      where: { id: postId },
+    });
 
     if (!post) {
       throw new NotFoundException();
     }
-    posts = posts.filter(post => post.id !== postId);
-
+    await this.postsRepository.delete(postId);
     return postId;
   }
 
