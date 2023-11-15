@@ -51,12 +51,19 @@ export class PostsService {
     @InjectRepository(PostModel) private readonly postsRepository: Repository<PostModel>
   ) { }
   async getAllPosts() {
-    return this.postsRepository.find();
+    return this.postsRepository.find({
+      select: {
+        title: true, // posts의 title 컬럼만 조회 
+        author: { email: true }, // relation 객체 author 의 email 컬럼만 조회 
+      },
+      relations: ['author']
+    });
   }
 
   async getPostById(id: number) {
     const post = await this.postsRepository.findOne({
-      where: { id }
+      relations: ['author'],
+      where: { id },
     });
 
     if (!post) {
@@ -66,11 +73,11 @@ export class PostsService {
     return post;
   }
 
-  async createPost(author: string, title: string, content: string) {
+  async createPost(authorId: number, title: string, content: string) {
     // 1) create -> 저장할 객체를 생성한다  
     // 2) save -> 객체를 저장한다 (create 메서드에서 생성한 객체로 )
     const post = this.postsRepository.create({
-      author,
+      author: { id: authorId },
       title,
       content,
       likeCount: 0,
@@ -80,7 +87,7 @@ export class PostsService {
     return newPost; // 새로 만든 post 리턴하기 
   }
 
-  async updatePost(postId: number, author: string, title: string, content: string) {
+  async updatePost(postId: number, title: string, content: string) {
     // save 의 기능 
     // 1) 만약 데이터가 존재하지 않으면, 새로 생성 
     // 2) 데이터가 존재하면, (같은 id 레코드) 값을 업데이트
@@ -91,8 +98,7 @@ export class PostsService {
     if (!post) {
       throw new NotFoundException();
     }
-    // 셋 중에 입력받은 것만 업데이트 처리 
-    if (author) { post.author = author; }
+    // 입력받은 것만 업데이트 처리 
     if (title) { post.title = title; }
     if (content) { post.content = content; }
 

@@ -9,6 +9,7 @@ export class PostModel {
   id: number;
 
   // users model FK 로 참조한다. not null (작성자가 없는 포스트를 허용하지 않는다 )
+  // ManyToOne 애노테이션을 가진 쪽에 fk 컬럼이 생성된다. 
   @ManyToOne(() => UsersModel, (user) => user.posts, { nullable: false })
   author: UsersModel;
 

@@ -19,21 +19,20 @@ export class PostsController {
 
   @Post()
   postPosts(
-    @Body('author') author: string,
+    @Body('authorId') authorId: number,
     @Body('title') title: string,
     @Body('content') content: string,
   ) {
-    return this.postsService.createPost(author, title, content);
+    return this.postsService.createPost(authorId, title, content);
   }
 
   @Put(':id') // path parameter 로 id를 받는다 
   putPost(
     @Param('id') id: string,
-    @Body('author') author?: string, // author, title, content 모두 optional
-    @Body('title') title?: string,
+    @Body('title') title?: string, // optional 입력값이라면 ? 를 붙여준다 
     @Body('content') content?: string,
   ) {
-    return this.postsService.updatePost(Number(id), author, title, content);
+    return this.postsService.updatePost(Number(id), title, content);
   }
 
   @Delete(':id')
