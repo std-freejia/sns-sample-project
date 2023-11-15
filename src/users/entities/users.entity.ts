@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { RolesEnum } from '../const/roles.const';
+import { PostModel } from 'src/posts/entities/posts.entity';
 
 @Entity()
 export class UsersModel {
@@ -18,4 +19,7 @@ export class UsersModel {
 
   @Column({ enum: Object.values(RolesEnum), default: RolesEnum.USER })
   role: RolesEnum;
+
+  @OneToMany(() => PostModel, (post) => post.author)
+  posts: PostModel[];  /**  userModel 이 작성한 post가 없다면, null이 아니라 [] 빈 배열. */
 }
